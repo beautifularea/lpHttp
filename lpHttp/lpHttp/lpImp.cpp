@@ -149,7 +149,7 @@ static void _execute_cgi(int sockfd, const char *path, char *method, char *query
     sprintf(buf, HTTP_OK);//追加到响应头
     send(sockfd, buf, strlen(buf), 0);
     
-    //?建立管道
+    //建立2个管道
     if(pipe(cgi_output) < 0) {
         err_quit("pipe error!");
     }
@@ -169,8 +169,6 @@ static void _execute_cgi(int sockfd, const char *path, char *method, char *query
         char length_env[255];
 
         //重定向
-        //With dup2, we specify the value of the new descriptor with the fd2 argument.
-        //If fd2 is already open, it is first closed. If fd equals fd2, then dup2 returns fd2 without closing it.
         dup2(cgi_output[1], 1);//1 stdout 标准输出
         dup2(cgi_input[0], 0);//0 stdin 标准输入
         
@@ -200,7 +198,6 @@ static void _execute_cgi(int sockfd, const char *path, char *method, char *query
         
         if(strcasecmp(method, POST) == 0) {
             for(i=0;i<content_length;++i) {
-//                read(sockfd, &c, 1);
                 recv(sockfd, &c, 1, 0);
                 printf("%c", c);
                 write(cgi_input[1], &c, 1);//写给child
@@ -216,7 +213,6 @@ static void _execute_cgi(int sockfd, const char *path, char *method, char *query
         
         waitpid(pid, &status, 0);
     }
-    
 }
 
 int start_socket(u_short *port) {
@@ -392,23 +388,3 @@ int readline(int sockfd, char *buf, size_t size) {
     
     return i;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
